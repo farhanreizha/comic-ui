@@ -65,7 +65,7 @@ export default function Home() {
                 <p className="text-xl mb-8 max-w-2xl leading-relaxed opacity-90">
                   Platform pembaca komik online terbaik dengan koleksi komik terlengkap. Temukan berbagai genre komik favoritmu disini.
                 </p>
-                <Button size="lg" variant="secondary" className="font-semibold hover:scale-105 transition-transform">
+                <Button size="lg" variant="secondary" className="font-semibold hover:scale-105 transition-transform cursor-pointer">
                   Jelajahi Komik
                   <ArrowRightIcon className="ml-2 h-5 w-5" />
                 </Button>

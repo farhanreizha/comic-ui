@@ -164,28 +164,30 @@ export default function ComicReaderPage() {
         totalPages={chapter.pages.length}
       />
 
-      <Card className="p-2 rounded-lg flex flex-row justify-between items-center mb-4">
-        <div className="flex space-x-2">
-          <Button onClick={handlePrevChapter} disabled={!hasPrevChapter} variant="secondary">
-            Chapter Sebelumnya
-          </Button>
-          <Button onClick={handlePrevPage} disabled={!hasPrevPage} variant="secondary">
-            Halaman Sebelumnya
-          </Button>
-        </div>
-        <div className="text-center">
-          <span className="text-muted-foreground">
-            Halaman {currentPage + 1} dari {chapter.pages.length}
-          </span>
-        </div>
-        <div className="flex space-x-2">
-          <Button onClick={handleNextPage} disabled={!hasNextPage} variant="secondary">
-            Halaman Berikutnya
-          </Button>
-          <Button onClick={handleNextChapter} disabled={!hasNextChapter} variant="secondary">
-            Chapter Berikutnya
-          </Button>
-        </div>
+      <Card className="mb-4">
+        <CardContent className="flex flex-col md:flex-row justify-between items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handlePrevChapter} disabled={!hasPrevChapter} variant="secondary">
+              Chapter Sebelumnya
+            </Button>
+            <Button onClick={handlePrevPage} disabled={!hasPrevPage} variant="secondary">
+              Halaman Sebelumnya
+            </Button>
+          </div>
+          <div className="text-center">
+            <span className="text-muted-foreground">
+              Halaman {currentPage + 1} dari {chapter.pages.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleNextPage} disabled={!hasNextPage} variant="secondary">
+              Halaman Berikutnya
+            </Button>
+            <Button onClick={handleNextChapter} disabled={!hasNextChapter} variant="secondary">
+              Chapter Berikutnya
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
       <Card className="rounded-lg shadow-md p-4 mb-6">
@@ -196,6 +198,7 @@ export default function ComicReaderPage() {
             .sort((a, b) => a.number - b.number)
             .map((c) => (
               <Button
+                key={c.id}
                 variant="outline"
                 className={cn("text-center p-2", {
                   "bg-blue-500 hover:border-blue-500 hover:text-blue-500": c.number === chapter.number,
@@ -203,9 +206,7 @@ export default function ComicReaderPage() {
                 })}
                 asChild
               >
-                <Link key={c.id} href={`/comics/${comic.id}/chapters/${c.number}`}>
-                  Ch. {c.number}
-                </Link>
+                <Link href={`/comics/${comic.id}/chapters/${c.number}`}>Ch. {c.number}</Link>
               </Button>
             ))}
         </div>

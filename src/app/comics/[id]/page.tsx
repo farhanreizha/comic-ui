@@ -10,11 +10,16 @@ import { getComicById } from "~/services/comicService";
 import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
+import useFavorites from "~/hooks/use-favorites";
+import { BookmarkIcon, StarIcon } from "lucide-react";
+import { cn } from "~/lib/utils";
 
 export default function ComicDetailPage() {
   const { id } = useParams();
   const [comic, setComic] = useState<Comic | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { addFavorite, favorites, removeFavorite } = useFavorites();
+  const isFavorite = favorites.some((f) => f.id === comic?.id);
 
   useEffect(() => {
     const fetchComic = async () => {
@@ -33,6 +38,11 @@ export default function ComicDetailPage() {
       fetchComic();
     }
   }, [id]);
+
+  const handleFavorite = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    isFavorite ? removeFavorite(comic?.id as string) : addFavorite(comic as Comic);
+  };
 
   if (isLoading) {
     return (
@@ -70,7 +80,13 @@ export default function ComicDetailPage() {
           <div className="md:w-2/3 lg:w-3/4 p-6">
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-3xl font-bold">{comic.title}</h1>
-              <Badge variant="outline" className="border-primary text-primary">
+              <Badge
+                variant={comic.status === "ongoing" ? "outline" : "default"}
+                className={cn("font-medium uppercase", {
+                  "text-primary border-primary bg-blue-300": comic.status === "ongoing",
+                  "bg-green-100 text-green-800 border-green-300": comic.status === "completed",
+                })}
+              >
                 {comic.status === "ongoing" ? "Ongoing" : "Completed"}
               </Badge>
             </div>
@@ -82,9 +98,7 @@ export default function ComicDetailPage() {
               <div className="flex items-center mb-2 text-muted-foreground">
                 <span className="font-semibold mr-2">Rating:</span>
                 <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
+                  <StarIcon className="h-4 w-4 text-yellow-500" fill="currentColor" />
                   <span className="ml-1">{comic.rating.toFixed(1)}</span>
                 </div>
               </div>
@@ -100,21 +114,27 @@ export default function ComicDetailPage() {
               <h2 className="text-xl font-semibold mb-2">Genre</h2>
               <div className="flex flex-wrap gap-2">
                 {comic.genres.map((genre) => (
-                  <Link
-                    key={genre}
-                    href={`/comics?genre=${genre}`}
-                    className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full text-sm text-gray-800 transition-colors"
-                  >
-                    {genre}
+                  <Link key={genre} href={`/comics?genre=${genre}`}>
+                    <Badge className="rounded-xl text-sm transition-colors hover:bg-transparent hover:border hover:border-primary hover:text-primary px-3 py-1 text-center">
+                      {genre}
+                    </Badge>
                   </Link>
                 ))}
               </div>
             </div>
 
-            <div>
+            <div className="mb-4">
               <h2 className="text-xl font-semibold mb-2">Sinopsis</h2>
               <p className="text-muted-foreground">{comic.description}</p>
             </div>
+            <Button size="icon" variant="ghost" onClick={handleFavorite}>
+              <BookmarkIcon
+                className={cn("size-7", {
+                  "text-yellow-400": isFavorite,
+                })}
+                fill="currentColor"
+              />
+            </Button>
           </div>
         </div>
       </Card>
@@ -130,12 +150,22 @@ export default function ComicDetailPage() {
               .sort((a, b) => b.number - a.number)
               .map((chapter) => (
                 <Button variant="outline" key={chapter.id} asChild>
-                  <Link href={`/comics/${comic.id}/chapters/${chapter.number}`} className="h-20 flex flex-col justify-center items-start">
-                    <div className="w-full flex justify-between items-center">
-                      <span className="font-medium">Chapter {chapter.number}</span>
-                      <span className="text-sm text-gray-500">{new Date(chapter.createdAt).toLocaleDateString("id-ID")}</span>
+                  <Link
+                    href={`/comics/${comic.id}/chapters/${chapter.number}`}
+                    className="h-20 flex flex-col justify-center items-start overflow-hidden"
+                  >
+                    <div className="flex gap-3 items-center w-full">
+                      <div className="relative rounded overflow-hidden size-14">
+                        <Image src={comic.coverImage} alt={comic.title} fill className="object-cover rounded-lg" />
+                      </div>
+                      <div className="w-full">
+                        <div className="w-full flex justify-between items-center">
+                          <span className="font-medium">Chapter {chapter.number}</span>
+                          <span className="text-sm text-gray-500">{new Date(chapter.createdAt).toLocaleDateString("id-ID")}</span>
+                        </div>
+                        {chapter.title && <p className="text-muted-foreground mt-1">{chapter.title}</p>}
+                      </div>
                     </div>
-                    {chapter.title && <p className="text-muted-foreground mt-1">{chapter.title}</p>}
                   </Link>
                 </Button>
               ))}

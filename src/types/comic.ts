@@ -18,6 +18,7 @@ export interface Chapter {
   comicId: string;
   number: number;
   title: string;
+  coverImage: string;
   pages: string[];
   createdAt: string;
   updatedAt: string;

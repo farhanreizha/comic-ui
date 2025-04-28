@@ -1,0 +1,147 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import MainLayout from "~/components/layout/MainLayout";
+import { Comic } from "~/types/comic";
+import { getComicById } from "~/services/comicService";
+import { Card } from "~/components/ui/card";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+
+export default function ComicDetailPage() {
+  const { id } = useParams();
+  const [comic, setComic] = useState<Comic | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchComic = async () => {
+      try {
+        setIsLoading(true);
+        const comicData = await getComicById(id as string);
+        setComic(comicData);
+      } catch (error) {
+        console.error("Error fetching comic:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchComic();
+    }
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!comic) {
+    return (
+      <MainLayout>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Komik Tidak Ditemukan</h2>
+          <p className="mb-6">Maaf, komik yang Anda cari tidak tersedia.</p>
+          <Link href="/comics" className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+            Kembali ke Daftar Komik
+          </Link>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  return (
+    <MainLayout>
+      <Card className="rounded-lg shadow-md overflow-hidden mb-8 text-foreground">
+        <div className="md:flex">
+          <div className="md:w-1/3 lg:w-1/4 p-6">
+            <div className="relative h-96 w-full">
+              <Image src={comic.coverImage} alt={comic.title} fill className="object-cover rounded-lg" />
+            </div>
+          </div>
+          <div className="md:w-2/3 lg:w-3/4 p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h1 className="text-3xl font-bold">{comic.title}</h1>
+              <Badge variant="outline" className="border-primary text-primary">
+                {comic.status === "ongoing" ? "Ongoing" : "Completed"}
+              </Badge>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-muted-foreground mb-2">
+                <span className="font-semibold">Penulis:</span> {comic.author}
+              </p>
+              <div className="flex items-center mb-2 text-muted-foreground">
+                <span className="font-semibold mr-2">Rating:</span>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                  <span className="ml-1">{comic.rating.toFixed(1)}</span>
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-2">
+                <span className="font-semibold">Views:</span> {comic.views.toLocaleString()}
+              </p>
+              <p className="text-muted-foreground mb-2">
+                <span className="font-semibold">Terakhir Update:</span> {new Date(comic.updatedAt).toLocaleDateString("id-ID")}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-2">Genre</h2>
+              <div className="flex flex-wrap gap-2">
+                {comic.genres.map((genre) => (
+                  <Link
+                    key={genre}
+                    href={`/comics?genre=${genre}`}
+                    className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full text-sm text-gray-800 transition-colors"
+                  >
+                    {genre}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Sinopsis</h2>
+              <p className="text-muted-foreground">{comic.description}</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="text-foreground rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Daftar Chapter</h2>
+        {comic.chapters.length === 0 ? (
+          <p className="text-muted-foreground">Belum ada chapter yang tersedia.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {comic.chapters
+              .slice()
+              .sort((a, b) => b.number - a.number)
+              .map((chapter) => (
+                <Button variant="outline" key={chapter.id} asChild>
+                  <Link href={`/comics/${comic.id}/chapters/${chapter.number}`} className="h-20 flex flex-col justify-center items-start">
+                    <div className="w-full flex justify-between items-center">
+                      <span className="font-medium">Chapter {chapter.number}</span>
+                      <span className="text-sm text-gray-500">{new Date(chapter.createdAt).toLocaleDateString("id-ID")}</span>
+                    </div>
+                    {chapter.title && <p className="text-muted-foreground mt-1">{chapter.title}</p>}
+                  </Link>
+                </Button>
+              ))}
+          </div>
+        )}
+      </Card>
+    </MainLayout>
+  );
+}
